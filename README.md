@@ -32,11 +32,12 @@
       
 <h3> 💻 개발 환경 </h3>
 
-      1. java 
-      2. Springboot
+      1. java 17
+      2. Springboot 3.1.2
 
 
 <h4>1. RestAPI 개발 - 사용자 관리 controller 일부 발췌</h4>
+
 ```java
 
     //개발에 참여한 RestAPI 중 일부 수정 발췌
