@@ -21,6 +21,7 @@
 
       [전체적인 NMS Web 개발]
       - Web Backend : 사용자관리, 로그인, 메뉴관리, 권한관리, Tenant관리, IP 권한관리, 세션관리, 세션 히스토리관리, 3rd party 관리, 장비 Group 관리 등 RestAPI 개발하였음.
+      - DB : 맡은 기능 DB ERD 설계
       
       [다국어 처리]
       - Exception 처리 및 log 등 다국어처리가 될 수 있도록 locale을 받아 해당 언어로 응답 될 수있도록 개발
@@ -28,8 +29,6 @@
       [권한 및 세션관리]
       - 사용자의 로그인기능(password 일치여부, lock처리, IP대역체크 등)과 사용자 권한(Tenant, 운용자 권한 등)에 따른 로직처리, 만료된 세션을 체크 경험이 있음.
       
-      [파일처리]
-      - 파일이나 이미지를 서버에 저장, DB에 저장 후 이를 다시 불러오는 RestAPI를 개발
       
 <h3> 💻 개발 환경 </h3>
 
@@ -37,7 +36,7 @@
       2. Springboot
 
 
-<h4>1. RestAPI 개발 </h4>
+<h4>1. RestAPI 개발 - DB ERD 일부발췌 </h4>
 
 
 <h4>1. 다국어처리</h4>
@@ -74,10 +73,44 @@ menu:
   PROCESS_SUCCESS: 처리 성공
 ```
 
-<h4>1. 권한/ 세션관리 - PR 내역 일부발췌</h4>
+<h4>1. 권한/ 세션관리 - 로직 구조 일부발췌</h4>
 
+```java
 
-<h4>1. 파일처리</h4>
+ 	//없는 계정인 경우
+        userNotFoundException(userIdPwdRequest, loginUserInfo);
 
+        //허용IP 대역 체크
+        if(ipCheck(getClientIp()) < 1) {
+            throw new NoPermitUserException(ApiResultCode.NO_PERMIT.getCode(), ApiResultCode.NO_PERMIT.getMessage());
+        }
+
+        //비밀번호 틀린경우
+        badCredentialsException(userIdPwdRequest, loginUserInfo, failHistory);
+
+        //lockout
+        lockedException(userIdPwdRequest, loginUserInfo, failHistory);
+        //비밀번호 만료
+        credentialsExpiredException(loginUserInfo, failHistory);
+        
+        //만료된 세션 정리, 로그인 성공 후/동시 접속자수 제어 전에 수행 필요
+        sessionCleanUpByUserId(userIdPwdRequest.getUser_id());
+        
+	//동시 접속자수 제어
+        if(!loginUserInfo.getUser_id().equals(SUPER_USER)) {
+            sessionExceedException();
+            alarmProcess.getAlarmCode(maxSessionCount); //알람발생
+        }
+
+        //로그인 성공시, cookie와 token 발급
+        final String cookie = cookieUtil.createAccessCookie();
+        final String token = jwtUtil.createTokenUserInfo(loginUserInfo, cookie);
+	
+ 	//로그인 record (로직생략)
+
+        //login fail reset
+        authenticationRepository.updateUserLoginFailCount(userIdPwdRequest.getUser_id(), 0);
+       
+```
 
 
