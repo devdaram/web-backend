@@ -40,21 +40,45 @@
 
 ```java
 
-    //개발에 참여한 RestAPI 중 일부 수정 발췌
-    @Operation(summary = "사용자 비밀번호 변경")
-    @PutMapping("/{userId}/password")
-    public ApiFormat<UpdateUserInfoRequest> updateSingleUserPwd(@PathVariable String userId, @RequestBody PwdChangeRequest pwdChangeRequest) {
+    //공통응답 class 생성 - 일부 수정발췌
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public class ApiFormat<T> {
 
-        return userService.updateUserPwd(userId, pwdChangeRequest);
+	@Setter
+	private ApiResult result;
+	@Setter
+	private T data;
     }
 
-    @Operation(summary = "사용자관리 , 사용자관리 공통 목록조회 ")
-    @GetMapping
-    public APIListResponse<UserInfoResponse> list(UserSearchRequest userSearchRequest, Pageable pageable) String userId) {
+    public class ApiResult {
 
-    	checkUserExists(userId);
+	private int code;
+	private String message;
 
-    	return APIListResponse.of(userService.list(userSearchRequest, pageable, userId));
+	public ApiResult(int code, String message) {
+		this.code = code;
+		this.message = message;
+	}
+    }
+
+    //result 공통 규격 생성 - 일부 수정 발췌
+    @Getter
+    @AllArgsConstructor
+    public enum ApiResultCode {
+
+	    PROCESS_SUCCESS(HttpStatus.OK, "ip.PROCESS_SUCCESS"),
+	    ..... 생략 ......
+	
+	    private final HttpStatus code;
+	    private final String message;
+	
+	    public int getStatusCode() {
+	        return code.value();
+	    }
+	
+	    public ApiResult apiResult() {
+	        return new ApiResult(this.code.value(), this.message);
+	    }
     }
 
     //일괄 에러핸들링을 위한 ExceptionAdvice 클래스 - 일부 수정 발췌
@@ -83,7 +107,6 @@
 }
 ```
 
-<img width="1121" alt="image" src="https://github.com/user-attachments/assets/b51035fa-a154-4200-9d55-c2e9b414fcc9">
 
 <h4>1. 다국어처리</h4>
 
