@@ -36,8 +36,53 @@
       2. Springboot
 
 
-<h4>1. RestAPI 개발 - DB ERD 일부발췌 </h4>
+<h4>1. RestAPI 개발 - 사용자 관리 controller 일부 발췌</h4>
+```java
 
+    //개발에 참여한 RestAPI 중 일부 수정 발췌
+    @Operation(summary = "사용자 비밀번호 변경")
+    @PutMapping("/{userId}/password")
+    public ApiFormat<UpdateUserInfoRequest> updateSingleUserPwd(@PathVariable String userId, @RequestBody PwdChangeRequest pwdChangeRequest) {
+
+        return userService.updateUserPwd(userId, pwdChangeRequest);
+    }
+
+    @Operation(summary = "사용자관리 , 사용자관리 공통 목록조회 ")
+    @GetMapping
+    public APIListResponse<UserInfoResponse> list(UserSearchRequest userSearchRequest, Pageable pageable) String userId) {
+
+    	checkUserExists(userId);
+
+    	return APIListResponse.of(userService.list(userSearchRequest, pageable, userId));
+    }
+
+    //일괄 에러핸들링을 위한 ExceptionAdvice 클래스 - 일부 수정 발췌
+    @ControllerAdvice
+    @RequiredArgsConstructor
+    @Slf4j
+    public class ExceptionAdvice {
+
+	    @ExceptionHandler(RuntimeException.class)
+	    public ProblemDetail runtimeException(RuntimeException exception) {
+	        log.error("error : {}", exception.getMessage());
+	
+	        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
+	    }
+	
+	    @ExceptionHandler
+	    public ProblemDetail illegalArgument(IllegalArgumentException exception) {
+	        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+	    }
+	
+	    @ExceptionHandler
+	    public ProblemDetail MethodArgumentNotValidException(MethodArgumentNotValidException exception) {
+	        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, 	 
+                exception.getFieldErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining()));
+    	    }
+}
+```
+
+<img width="1121" alt="image" src="https://github.com/user-attachments/assets/b51035fa-a154-4200-9d55-c2e9b414fcc9">
 
 <h4>1. 다국어처리</h4>
 
